@@ -19,11 +19,12 @@ import LayerSearchSource = require("esri/widgets/Search/LayerSearchSource");
 import { initialTimeExtent, timeExtents } from "./timeUtils";
 import { updateRenderer, UpdateRendererParams } from "./rendererUtils";
 import { updatePopupTemplate } from "./popupTemplateUtils";
-import { infectionsPopulationLayer, polygonFillPortalItemId, polygonFillLayerId, citiesContextLayer, fillColor } from "./layerUtils";
+import { infectionsPopulationLayer, polygonFillPortalItemId, polygonFillLayerId, citiesContextLayer, fillColor, benchmarkLayer } from "./layerUtils";
 import { SimpleRenderer } from "esri/renderers";
 import { SimpleFillSymbol, SimpleLineSymbol, TextSymbol } from "esri/symbols";
 import { getStats } from "./statistics";
 import { formatNumber, convertNumberFormatToIntlOptions, formatDate, convertDateFormatToIntlOptions } from "esri/intl";
+import { viewModel } from "esri/widgets/CoordinateConversion/support/Format";
 
 (async () => {
 
@@ -301,6 +302,12 @@ import { formatNumber, convertNumberFormatToIntlOptions, formatDate, convertDate
       updateStats();
     }
 
+
+    async function initializeBenchmarkLayer(){
+      console.log((benchmarkLayer.renderer as __esri.RendererWithVisualVariables).visualVariables[0].valueExpression);
+      view.map.add(benchmarkLayer);
+    }
+
     function updateLayer (useExistingTemplate?: boolean) {
       updateRenderer({
         layer: infectionsPopulationLayer,
@@ -338,6 +345,7 @@ import { formatNumber, convertNumberFormatToIntlOptions, formatDate, convertDate
     }
 
     await initializeLayer();
+    await initializeBenchmarkLayer();
 
     slider.watch("values",  () => {
       if (slider.viewModel.state === "playing"){

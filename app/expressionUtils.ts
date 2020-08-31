@@ -1,4 +1,10 @@
+import lang = require("esri/core/lang");
 import { prefix, separator } from "./layerUtils";
+
+const initialTimeExtent = {
+  start: new Date(2020, 0, 22),
+  end: new Date(new Date().setDate(new Date().getDate() - 1))
+};
 
 export function createNewCasesAverageExpression(currentDateFieldName: string, excludeGetFieldFromDate?: boolean){
   const getFieldFromDate = getFieldFromDateFunction();
@@ -459,4 +465,46 @@ export function expressionPercentChange (startExpression: string, endExpression:
   `
 
   return includeGetFieldFromDate ? getFieldFromDate + base : base;
+}
+
+function getFieldFromDate(d: Date) {
+  const fieldName = `${prefix}${("0"+(d.getMonth() + 1)).slice(-2)}${separator}${("0"+d.getDate()).slice(-2)}${separator}${(d.getFullYear()).toString()}`;
+  return fieldName;
+}
+
+function getNextDay(d: Date){
+  return new Date(lang.clone(d).setDate(d.getDate() + 1));
+}
+
+export function createAverageActiveCasesExpression (){
+
+  const getFieldFromDateArcadeFunction = getFieldFromDateFunction();
+  let functionBase = ``;
+  let averageArray = `var averageArray = [ `;
+
+  let currentDate = initialTimeExtent.start;
+  const endDate = initialTimeExtent.end;
+
+  while (currentDate <= endDate){
+    const currentFieldName = getFieldFromDate(currentDate);
+
+    functionBase += `
+      function ${currentFieldName}Average(){
+        ${createActiveCasesExpression(currentFieldName, true)}
+      }
+
+    `;
+
+    averageArray += `${currentFieldName}Average()`;
+    currentDate = getNextDay(currentDate);
+    averageArray += currentDate < endDate ? ", " : "]";
+  }
+  // averageArray += "]";
+
+  const returnValue = `
+
+  return Max(averageArray)`;
+
+  const expression = getFieldFromDateArcadeFunction + functionBase + averageArray + returnValue;
+  return expression;
 }

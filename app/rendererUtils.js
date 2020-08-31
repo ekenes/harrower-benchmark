@@ -40,9 +40,11 @@ define(["require", "exports", "esri/renderers/SimpleRenderer", "esri/renderers/v
     };
     function createActiveCasesRenderer(params) {
         var colors = colorRamps.light[0];
-        var currentDate = params.currentDate, useAverage = params.useAverage;
+        var currentDate = params.currentDate;
         var startDateFieldName = timeUtils_1.getFieldFromDate(currentDate);
         var sizeVariable = new SizeVariable({
+            valueExpressionTitle: "Estimated active* COVID-19 cases on " + timeUtils_1.formatDate(currentDate),
+            valueExpression: expressionUtils_1.createActiveCasesExpression(startDateFieldName),
             stops: [
                 { value: 0, size: 0 },
                 { value: 1, size: "2px" },
@@ -52,25 +54,41 @@ define(["require", "exports", "esri/renderers/SimpleRenderer", "esri/renderers/v
                 { value: 100000, size: "200px" }
             ]
         });
-        if (useAverage) {
-            sizeVariable.valueExpressionTitle = "Active* COVID-19 cases average";
-            sizeVariable.valueExpression = expressionUtils_1.createActiveCasesExpression(startDateFieldName);
-        }
-        else {
-            sizeVariable.valueExpressionTitle = "Estimated active* COVID-19 cases on " + timeUtils_1.formatDate(currentDate);
-            sizeVariable.valueExpression = expressionUtils_1.createActiveCasesExpression(startDateFieldName);
-        }
         var visualVariables = [sizeVariable];
         return new SimpleRenderer({
-            symbol: createDefaultSymbol(null, new symbols_1.SimpleLineSymbol({
-                color: new Color("rgba(230, 0, 73, 0.8)"),
-                width: 0.5
+            symbol: createDefaultSymbol(new Color("rgba(230, 0, 73, 0.4)"), new symbols_1.SimpleLineSymbol({
+                color: new Color("rgba(0, 0, 200, 1)"),
+                width: 0
             })),
             label: "County",
             visualVariables: visualVariables
         });
     }
     exports.createActiveCasesRenderer = createActiveCasesRenderer;
+    function createActiveAverageCasesRenderer() {
+        var sizeVariable = new SizeVariable({
+            valueExpressionTitle: "Average active* COVID-19 cases",
+            valueExpression: expressionUtils_1.createAverageActiveCasesExpression(),
+            stops: [
+                { value: 0, size: 0 },
+                { value: 1, size: "2px" },
+                { value: 100, size: "4px" },
+                { value: 1000, size: "10px" },
+                { value: 10000, size: "50px" },
+                { value: 100000, size: "200px" }
+            ]
+        });
+        var visualVariables = [sizeVariable];
+        return new SimpleRenderer({
+            symbol: createDefaultSymbol(null, new symbols_1.SimpleLineSymbol({
+                color: new Color("rgba(0, 0, 0, 0.8)"),
+                width: 0.5
+            })),
+            label: "County",
+            visualVariables: visualVariables
+        });
+    }
+    exports.createActiveAverageCasesRenderer = createActiveAverageCasesRenderer;
     function createDefaultSymbol(color, outline) {
         return new symbols_1.SimpleMarkerSymbol({
             color: color || null,

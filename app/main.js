@@ -76,6 +76,15 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/core/la
                         });
                     });
                 }
+                function initializeBenchmarkLayer() {
+                    return __awaiter(this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            console.log(layerUtils_1.benchmarkLayer.renderer.visualVariables[0].valueExpression);
+                            view.map.add(layerUtils_1.benchmarkLayer);
+                            return [2 /*return*/];
+                        });
+                    });
+                }
                 function updateLayer(useExistingTemplate) {
                     rendererUtils_1.updateRenderer({
                         layer: layerUtils_1.infectionsPopulationLayer,
@@ -357,6 +366,9 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/core/la
                             }
                             return [4 /*yield*/, initializeLayer()];
                         case 1:
+                            _a.sent();
+                            return [4 /*yield*/, initializeBenchmarkLayer()];
+                        case 2:
                             _a.sent();
                             slider.watch("values", function () {
                                 if (slider.viewModel.state === "playing") {

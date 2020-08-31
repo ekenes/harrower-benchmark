@@ -1,4 +1,4 @@
-define(["require", "exports", "esri/layers/FeatureLayer", "esri/layers/support/LabelClass", "esri/Color", "esri/renderers", "esri/symbols"], function (require, exports, FeatureLayer, LabelClass, Color, renderers_1, symbols_1) {
+define(["require", "exports", "esri/layers/FeatureLayer", "esri/layers/support/LabelClass", "esri/Color", "esri/renderers", "esri/symbols", "./rendererUtils"], function (require, exports, FeatureLayer, LabelClass, Color, renderers_1, symbols_1, rendererUtils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // Data from Johns Hopkins University
@@ -7,8 +7,18 @@ define(["require", "exports", "esri/layers/FeatureLayer", "esri/layers/support/L
     exports.polygonFillLayerId = 2; // polygons
     exports.separator = "_";
     exports.prefix = "DAYSTRING_";
+    exports.benchmarkLayer = new FeatureLayer({
+        title: "Benchmark",
+        portalItem: {
+            id: exports.polygonFillPortalItemId
+        },
+        layerId: exports.polygonFillLayerId,
+        outFields: ["*"],
+        renderer: rendererUtils_1.createActiveAverageCasesRenderer()
+    });
     exports.infectionsPopulationLayer = new FeatureLayer({
         title: null,
+        legendEnabled: false,
         portalItem: {
             id: exports.polygonFillPortalItemId
         },

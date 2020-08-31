@@ -1,6 +1,10 @@
-define(["require", "exports", "./layerUtils"], function (require, exports, layerUtils_1) {
+define(["require", "exports", "esri/core/lang", "./layerUtils"], function (require, exports, lang, layerUtils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var initialTimeExtent = {
+        start: new Date(2020, 0, 22),
+        end: new Date(new Date().setDate(new Date().getDate() - 1))
+    };
     function createNewCasesAverageExpression(currentDateFieldName, excludeGetFieldFromDate) {
         var getFieldFromDate = getFieldFromDateFunction();
         var base = "\n    var unit = 7;\n    var currentDayFieldName = \"" + currentDateFieldName + "\";\n    var currentDayValue = $feature[currentDayFieldName];\n    var currentDayValueParts = Split(currentDayValue, \"|\");\n    var currentDayValueCases = Number(currentDayValueParts[0]);\n    var currentDayValueDeaths = Number(currentDayValueParts[1]);\n\n    var parts = Split(Replace(currentDayFieldName,\"" + layerUtils_1.prefix + "\",\"\"), \"" + layerUtils_1.separator + "\");\n    var currentDayFieldDate = Date(Number(parts[2]), Number(parts[0])-1, Number(parts[1]));\n    var previousDay = DateAdd(currentDayFieldDate, (-1 * unit), 'days');\n    if (Month(previousDay) == 0 && Day(previousDay) <= 21 && Year(previousDay) == 2020){\n      return 0;\n    }\n\n    var previousDayFieldName = getFieldFromDate(previousDay);\n    var previousDayValue = $feature[previousDayFieldName];\n    var previousDayValueParts = Split(previousDayValue, \"|\");\n    var previousDayValueCases = Number(previousDayValueParts[0]);\n    var previousDayValueDeaths = Number(previousDayValueParts[1]);\n\n    return Round((currentDayValueCases - previousDayValueCases) / unit);\n  ";
@@ -76,5 +80,31 @@ define(["require", "exports", "./layerUtils"], function (require, exports, layer
         return includeGetFieldFromDate ? getFieldFromDate + base : base;
     }
     exports.expressionPercentChange = expressionPercentChange;
+    function getFieldFromDate(d) {
+        var fieldName = "" + layerUtils_1.prefix + ("0" + (d.getMonth() + 1)).slice(-2) + layerUtils_1.separator + ("0" + d.getDate()).slice(-2) + layerUtils_1.separator + (d.getFullYear()).toString();
+        return fieldName;
+    }
+    function getNextDay(d) {
+        return new Date(lang.clone(d).setDate(d.getDate() + 1));
+    }
+    function createAverageActiveCasesExpression() {
+        var getFieldFromDateArcadeFunction = getFieldFromDateFunction();
+        var functionBase = "";
+        var averageArray = "var averageArray = [ ";
+        var currentDate = initialTimeExtent.start;
+        var endDate = initialTimeExtent.end;
+        while (currentDate <= endDate) {
+            var currentFieldName = getFieldFromDate(currentDate);
+            functionBase += "\n      function " + currentFieldName + "Average(){\n        " + createActiveCasesExpression(currentFieldName, true) + "\n      }\n\n    ";
+            averageArray += currentFieldName + "Average()";
+            currentDate = getNextDay(currentDate);
+            averageArray += currentDate < endDate ? ", " : "]";
+        }
+        // averageArray += "]";
+        var returnValue = "\n\n  return Max(averageArray)";
+        var expression = getFieldFromDateArcadeFunction + functionBase + averageArray + returnValue;
+        return expression;
+    }
+    exports.createAverageActiveCasesExpression = createAverageActiveCasesExpression;
 });
 //# sourceMappingURL=expressionUtils.js.map

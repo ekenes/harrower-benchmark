@@ -3,6 +3,7 @@ import LabelClass = require("esri/layers/support/LabelClass");
 import Color = require("esri/Color");
 import { SimpleRenderer } from "esri/renderers";
 import { SimpleMarkerSymbol, TextSymbol } from "esri/symbols";
+import { createActiveCasesRenderer, createActiveAverageCasesRenderer } from "./rendererUtils";
 
 // Data from Johns Hopkins University
 // "https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series";
@@ -13,8 +14,19 @@ export const polygonFillLayerId = 2;  // polygons
 export const separator = "_";
 export const prefix = "DAYSTRING_";
 
+export const benchmarkLayer = new FeatureLayer({
+  title: "Benchmark",
+  portalItem: {
+    id: polygonFillPortalItemId
+  },
+  layerId: polygonFillLayerId,
+  outFields: ["*"],
+  renderer: createActiveAverageCasesRenderer()
+});
+
 export const infectionsPopulationLayer = new FeatureLayer({
   title: null,
+  legendEnabled: false,
   portalItem: {
     id: polygonFillPortalItemId
   },

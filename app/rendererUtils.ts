@@ -9,7 +9,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 import lang = require("esri/core/lang");
 
 import { getFieldFromDate, formatDate } from "./timeUtils";
-import { createActiveCasesExpression } from "./expressionUtils";
+import { createActiveCasesExpression, createAverageActiveCasesExpression } from "./expressionUtils";
 import { SimpleLineSymbol, SimpleMarkerSymbol, SimpleFillSymbol } from "esri/symbols";
 import { DotDensityRenderer } from "esri/renderers";
 
@@ -62,17 +62,18 @@ const colorRamps = {
 
 
 interface CreateRendererParams {
-  currentDate: Date,
-  useAverage?: boolean
+  currentDate: Date
 }
 
 export function createActiveCasesRenderer(params: CreateRendererParams) : COVIDRenderer {
   const colors = colorRamps.light[0];
 
-  const { currentDate, useAverage } = params;
+  const { currentDate } = params;
   const startDateFieldName = getFieldFromDate(currentDate);
 
   let sizeVariable = new SizeVariable({
+    valueExpressionTitle: `Estimated active* COVID-19 cases on ${formatDate(currentDate)}`,
+    valueExpression: createActiveCasesExpression(startDateFieldName),
     stops: [
       { value: 0, size: 0 },
       { value: 1, size: "2px" },
@@ -83,20 +84,38 @@ export function createActiveCasesRenderer(params: CreateRendererParams) : COVIDR
     ]
   });
 
-  if(useAverage){
-    sizeVariable.valueExpressionTitle = `Active* COVID-19 cases average`;
-    sizeVariable.valueExpression = createActiveCasesExpression(startDateFieldName);
-  } else {
-    sizeVariable.valueExpressionTitle = `Estimated active* COVID-19 cases on ${formatDate(currentDate)}`;
-    sizeVariable.valueExpression = createActiveCasesExpression(startDateFieldName);
-  }
+  const visualVariables = [ sizeVariable ];
 
+  return new SimpleRenderer({
+    symbol: createDefaultSymbol(new Color("rgba(230, 0, 73, 0.4)"), new SimpleLineSymbol({
+      color: new Color("rgba(0, 0, 200, 1)"),
+      width: 0
+    })),
+    label: "County",
+    visualVariables
+  });
+}
+
+export function createActiveAverageCasesRenderer() : COVIDRenderer {
+
+  let sizeVariable = new SizeVariable({
+    valueExpressionTitle: `Average active* COVID-19 cases`,
+    valueExpression: createAverageActiveCasesExpression(),
+    stops: [
+      { value: 0, size: 0 },
+      { value: 1, size: "2px" },
+      { value: 100, size: "4px" },
+      { value: 1000, size: "10px" },
+      { value: 10000, size: "50px" },
+      { value: 100000, size: "200px" }
+    ]
+  });
 
   const visualVariables = [ sizeVariable ];
 
   return new SimpleRenderer({
     symbol: createDefaultSymbol(null, new SimpleLineSymbol({
-      color: new Color("rgba(230, 0, 73, 0.8)"),
+      color: new Color("rgba(0, 0, 0, 0.8)"),
       width: 0.5
     })),
     label: "County",
